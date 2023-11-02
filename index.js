@@ -2,6 +2,8 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const dotenv = require('dotenv');
+dotenv.config();
 const port = process.env.PORT || 5001;
 
 // middlewar
@@ -15,13 +17,14 @@ app.use(express.json());
 
 
 const uri = "mongodb+srv://mazharulislam3569:uATm3IUrpIPEko6S@cluster0.llpjorv.mongodb.net/?retryWrites=true&w=majority";
-
+// const uri = "mongodb+srv://mazharulislam3569:uATm3IUrpIPEko6S@cluster0.llpjorv.mongodb.net/?retryWrites=true&w=majority";
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
+    useUnifiedTopology: true
   }
 });
 
@@ -31,6 +34,7 @@ async function run() {
     await client.connect();
 
     const productCollection = client.db('productDB').collection('product')
+    const cartCollection = client.db('productDB').collection('cartData')
 
 
     app.post('/products',async(req,res)=>{
@@ -42,6 +46,37 @@ async function run() {
       res.send(result);
 
     })
+
+    // cart
+    app.post('/cart',async(req,res)=>{
+      console.log('post api hitting');
+      const cart = req.body
+      console.log(cart);
+      const result = await cartCollection.insertOne(cart)
+      console.log(result);
+      res.send(result);
+
+    })
+
+    app.get("/cart", async (req, res) => {
+      const result = await cartCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/products", async (req, res) => {
+      const result = await productCollection.find().toArray();
+      res.send(result);
+    });
+
+
+
+    app.get("/product", async (req, res) => {
+      const result = await productCollection.find().toArray();
+      res.send(result);
+    });
+
+
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -51,10 +86,6 @@ async function run() {
   }
 }
 run().catch(console.dir);
-
-
-
-
 
 
 app.get('/',(req,res)=>{
